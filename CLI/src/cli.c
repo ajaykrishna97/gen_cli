@@ -88,7 +88,7 @@ CLI_STATUS cli_init(CLI_HDL *hdl)
 
 #ifdef __linux__
 	pthread_create(&main_ctx->data_buf.con_thread,NULL,handle_get_char,main_ctx);
-	if (0 != main_ctx->data_buf.con_thread) {
+	if (0 == main_ctx->data_buf.con_thread) {
 #elif _WIN32
 	main_ctx->data_buf.con_thread = CreateThread(NULL, 0, handle_get_char,
 			main_ctx, 0, 0);
