@@ -12,6 +12,7 @@
 #include  "helper.h"
 
 #ifdef __linux__
+#include <pthread.h>
 #elif _WIN32
 #include <windows.h>
 #else
@@ -26,10 +27,16 @@ typedef void (*interpretorFuncPtr)(pvoid ,uint8_t* , uint16_t);
 typedef void (*msgfuncptr)(void *hdl);
 
 
-
 typedef struct cli_buffer_St
 {
+
+#ifdef __linux__
+    pthread_t 	 con_thread;
+#elif _WIN32
 	HANDLE 		 con_thread;
+#else
+#error "PLATFORM NOT SELECTED WIN/LINUX"
+#endif
 	uint32_t     lastChar;
 	uint8_t      rxBuf[MAX_RX_BUF];
 	uint8_t      txBuf[MAX_TX_BUF];

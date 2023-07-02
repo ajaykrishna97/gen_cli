@@ -15,15 +15,14 @@ static bool consoleInit(p_cli_ctx ctx ,uint16_t bufLen, uint16_t timeout, uint16
 static void printhelpstring(pconsolecommand cmd);
 
 #ifdef __linux__
-void handle_get_char(void ctx)
+void* handle_get_char(void *ctx)
 #elif _WIN32
-DWORD WINAPI handle_get_char(LPVOID lpParam)
+DWORD WINAPI handle_get_char(LPVOID ctx)
 #else
 #error "PLATFORM NOT SELECTED WIN/LINUX"
 #endif
 {
-	p_cli_ctx con = (p_cli_ctx)lpParam;
-
+	p_cli_ctx con = (p_cli_ctx)ctx;
 
 	while (1)
 	{
@@ -83,17 +82,24 @@ CLI_STATUS cli_init(CLI_HDL *hdl)
 {
 	CLI_STATUS ret_val = CLI_FAILUE;
 
-	p_cli_ctx main_ctx = calloc(1 , sizeof(cli_ctx));
+	p_cli_ctx main_ctx = calloc(1, sizeof(cli_ctx));
 
-	consoleInit(main_ctx,1024,1000,1,uartCliCmd);
-	main_ctx->data_buf.con_thread = CreateThread(NULL, 0, handle_get_char, main_ctx, 0, 0);
+	consoleInit(main_ctx, 1024, 1000, 1, uartCliCmd);
 
-	if (NULL == main_ctx->data_buf.con_thread )
-	{
+#ifdef __linux__
+	pthread_create(&main_ctx->data_buf.con_thread,NULL,handle_get_char,main_ctx);
+	if (0 != main_ctx->data_buf.con_thread) {
+#elif _WIN32
+	main_ctx->data_buf.con_thread = CreateThread(NULL, 0, handle_get_char,
+			main_ctx, 0, 0);
+	if (NULL == main_ctx->data_buf.con_thread) {
+#else
+#error "PLATFORM NOT SELECTED WIN/LINUX"
+#endif
+
 		LOGD("CON thread init failed \n");
-	}
-	else{
-		*hdl = (CLI_HDL)main_ctx;
+	} else {
+		*hdl = (CLI_HDL) main_ctx;
 		LOGD("CON thread init success \n");
 		ret_val = CLI_SUCCESS;
 	}
