@@ -12,3 +12,7 @@
 - changed readme
 - Added CHANGELOG.md
 
+### 02-JUL-2023
+- Added CMakeList
+- Added LINUX support
+- Modified readme
