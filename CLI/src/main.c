@@ -24,10 +24,14 @@ int32_t main(void)
 	if(status == CLI_SUCCESS)
 	{
 		ret_val = 0;
-		LOGD("CLI init success\n");
+
+	}
+	else
+	{
+		LOGD("CLI init failed\n");
 	}
 
-	while(1)
+	while(0 == ret_val)
 	{
 		consoleProcess(hdl);
 	}

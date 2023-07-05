@@ -120,6 +120,8 @@ char *printFormatSpace(char *str , uint8_t spaces)
 {
 	if(spaces > MAX_SPACES) spaces = MAX_SPACES;
 
+	if(spaces < strlen(str)) spaces = strlen(str);
+
 	memset((void *)spaceBuf ,0 ,32);
 	memset((void *)spaceBuf ,0x20 ,(spaces - strlen(str)));
 

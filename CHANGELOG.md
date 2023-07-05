@@ -16,3 +16,10 @@
 - Added CMakeList
 - Added LINUX support
 - Modified readme
+
+### 05-JUL-2023
+- Added multi page support 
+- Added back , home command
+- Added history manager
+- minor fixes and performance improvements
+- improved help interface

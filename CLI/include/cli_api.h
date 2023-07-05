@@ -8,8 +8,36 @@
 #ifndef INCLUDE_CLI_API_H_
 #define INCLUDE_CLI_API_H_
 
+#include "dtypes.h"
+
+typedef void (*interpretorFuncPtr)(pvoid ,uint8_t* , uint16_t);
+typedef void (*msgfuncptr)(void *hdl);
+
+#define VERSION "01.00.00"
+#define PRINT_HELP_SPACER 10
+
+typedef enum console_entry_type_t
+{
+	CONSOLE_PAGE,
+	CONSOLE_COMMAND,
+	CONSOLE_END
+}CONSOLE_ENTRY_TYPE;
+
+typedef struct consolecommands_
+{
+	CONSOLE_ENTRY_TYPE         type;
+	char 			          *commandstr;
+	char              		  *helpstr;
+	msgfuncptr		           func;
+	struct consolecommands_   *next_page;
+
+}consolecommands , *pconsolecommand;
+
 #define CMDFUNC(NAME) void NAME ## _method(void *hdl)
-#define COMMAND(NAME , HELPSTRING)  { #NAME, #HELPSTRING, NAME ## _method }
+
+#define COMMAND(NAME , HELPSTRING)  {CONSOLE_COMMAND, #NAME, #HELPSTRING, NAME ## _method , NULL}
+#define PAGE(NAME , HELPSTRING, page_list)  {CONSOLE_PAGE, #NAME, #HELPSTRING, NULL , page_list}
+
 
 #define PRINTF printf
 #define console PRINTF

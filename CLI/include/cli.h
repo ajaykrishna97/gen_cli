@@ -10,6 +10,7 @@
 
 #include "string.h"
 #include  "helper.h"
+#include "cli_api.h"
 
 #ifdef __linux__
 #include <pthread.h>
@@ -19,13 +20,13 @@
 #error "PLATFORM NOT SELECTED WIN/LINUX"
 #endif
 
+#define MAX_PAGE_HISTORY 16
+
 #define MAX_RX_BUF 1024
 #define MAX_TX_BUF 1024
 #define MAX_CONSOLE_BUF 1024
 
-typedef void (*interpretorFuncPtr)(pvoid ,uint8_t* , uint16_t);
-typedef void (*msgfuncptr)(void *hdl);
-
+#define STAR_SPACER LOGD("*********************************************************\n")
 
 typedef struct cli_buffer_St
 {
@@ -51,24 +52,29 @@ typedef struct cli_buffer_St
 
 }cli_buf_h , *p_cli_buf_h;
 
-typedef struct consolecommands_
-{
-	char *commandstr;
-	char *helpstr;
-	msgfuncptr func;
 
-}consolecommands , *pconsolecommand;
+
+typedef struct page_handler_st
+{
+	uint16_t history_count;
+	pconsolecommand page_history[MAX_PAGE_HISTORY];
+
+	pconsolecommand home_page;
+	pconsolecommand current_page;
+
+}console_page_st, *p_console_page_st;
 
 typedef struct consoleHandler_st
 {
-	uint8_t              buf[MAX_CONSOLE_BUF];
-	uint16_t             index;
-	uint16_t             maxBufLen;
-	uint16_t             timeout;
-	uint8_t              echo;
-	interpretorFuncPtr   asciiInterpretor;
-	interpretorFuncPtr   binaryInterpretor;
-	pconsolecommand      consoleCmd;
+	uint8_t                buf[MAX_CONSOLE_BUF];
+	uint16_t               index;
+	uint16_t               maxBufLen;
+	uint16_t               timeout;
+	uint8_t                echo;
+	interpretorFuncPtr     asciiInterpretor;
+	interpretorFuncPtr     binaryInterpretor;
+	console_page_st        consolePageHolder;
+	pconsolecommand        houseKeepingCmd;
 }consoleHandler , *pconsoleHandler;
 
 typedef struct cli_st
