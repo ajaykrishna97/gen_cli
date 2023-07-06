@@ -10,17 +10,39 @@
 
 #include "dtypes.h"
 
+#define DEBUG_EN 1
+
+#define LOG_SPACER LOGD("*********************************************************\n")
+
+#define CMDFUNC(NAME) void NAME ## _method(void *hdl)
+
+#define COMMAND(NAME , HELPSTRING)  {CONSOLE_COMMAND, #NAME, #HELPSTRING, NAME ## _method , NULL}
+#define PAGE(NAME , HELPSTRING, page_list)  {CONSOLE_PAGE, #NAME, #HELPSTRING, NULL , page_list}
+
+#define PRINTF printf
+#define console PRINTF
+
+#define LOG_DEBUG   if(DEBUG_EN) PRINTF
+#define LOG_ERROR   PRINTF("ERROR:"); \
+				PRINTF
+
+#define LOGD(...) LOG_DEBUG(__VA_ARGS__)
+#define LOGE(...) LOG_ERROR(__VA_ARGS__)
+
+
 typedef void (*interpretorFuncPtr)(pvoid ,uint8_t* , uint16_t);
 typedef void (*msgfuncptr)(void *hdl);
 
 #define VERSION "01.00.00"
 #define PRINT_HELP_SPACER 10
 
+typedef struct cli_st cli_ctx , *p_cli_ctx;
+
 typedef enum console_entry_type_t
 {
 	CONSOLE_PAGE,
 	CONSOLE_COMMAND,
-	CONSOLE_END
+	CONSOLE_ENTRY_END
 }CONSOLE_ENTRY_TYPE;
 
 typedef struct consolecommands_
@@ -33,34 +55,23 @@ typedef struct consolecommands_
 
 }consolecommands , *pconsolecommand;
 
-#define CMDFUNC(NAME) void NAME ## _method(void *hdl)
-
-#define COMMAND(NAME , HELPSTRING)  {CONSOLE_COMMAND, #NAME, #HELPSTRING, NAME ## _method , NULL}
-#define PAGE(NAME , HELPSTRING, page_list)  {CONSOLE_PAGE, #NAME, #HELPSTRING, NULL , page_list}
-
-
-#define PRINTF printf
-#define console PRINTF
-
-#define DEBUG_EN 1
-
-#define LOG_DEBUG   if(DEBUG_EN) PRINTF
-#define LOG_ERROR   PRINTF("ERROR:"); \
-				PRINTF
-
-#define LOGD(...) LOG_DEBUG(__VA_ARGS__)
-#define LOGE(...) LOG_ERROR(__VA_ARGS__)
-
-
 typedef enum CLI_STATUS
 {
 	CLI_FAILUE  = -1,
 	CLI_SUCCESS = 0
 }CLI_STATUS;
 
-typedef void *CLI_HDL;
+typedef struct cli_init_st
+{
+	pconsolecommand home_page;
 
-CLI_STATUS cli_init(CLI_HDL *hdl);
-void consoleProcess(CLI_HDL hdl);
+	uint16_t receive_buffer_size;
+	bool     echo;
+}cli_init_t , *p_cli_init_t;
+
+CLI_STATUS cli_init(p_cli_ctx *hdl , p_cli_init_t init_info);
+void consoleProcess(p_cli_ctx hdl);
+
+bool exit_check(p_cli_ctx hdl);
 
 #endif /* INCLUDE_CLI_API_H_ */

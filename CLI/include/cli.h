@@ -26,8 +26,6 @@
 #define MAX_TX_BUF 1024
 #define MAX_CONSOLE_BUF 1024
 
-#define STAR_SPACER LOGD("*********************************************************\n")
-
 typedef struct cli_buffer_St
 {
 
@@ -53,11 +51,15 @@ typedef struct cli_buffer_St
 }cli_buf_h , *p_cli_buf_h;
 
 
-
 typedef struct page_handler_st
 {
+	uint32_t total_commands;
 	uint16_t history_count;
-	pconsolecommand page_history[MAX_PAGE_HISTORY];
+	struct history_maintainer_st
+	{
+		uint32_t command_index;
+		pconsolecommand page_history;
+	}page_history_info[MAX_PAGE_HISTORY];
 
 	pconsolecommand home_page;
 	pconsolecommand current_page;
@@ -69,7 +71,6 @@ typedef struct consoleHandler_st
 	uint8_t                buf[MAX_CONSOLE_BUF];
 	uint16_t               index;
 	uint16_t               maxBufLen;
-	uint16_t               timeout;
 	uint8_t                echo;
 	interpretorFuncPtr     asciiInterpretor;
 	interpretorFuncPtr     binaryInterpretor;
@@ -77,11 +78,13 @@ typedef struct consoleHandler_st
 	pconsolecommand        houseKeepingCmd;
 }consoleHandler , *pconsoleHandler;
 
-typedef struct cli_st
+struct cli_st
 {
 	tokener_ctx      token_ctx;
 	pconsoleHandler  con;
 	cli_buf_h        data_buf;
-}cli_ctx , *p_cli_ctx;
+
+	bool 			 quit_flag;
+};
 
 #endif /* INCLUDE_CLI_H_ */

@@ -23,3 +23,10 @@
 - Added history manager
 - minor fixes and performance improvements
 - improved help interface
+
+### 06-JUL-2023
+- Added API definitions 
+- Added quit command
+- fixed infinite "back" bug
+- updated readme
+- Added sample screenshots

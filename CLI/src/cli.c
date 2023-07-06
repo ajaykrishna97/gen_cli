@@ -10,7 +10,7 @@
 #include  "helper.h"
 #include  "stdlib.h"
 
-static bool consoleInit(p_cli_ctx ctx ,uint16_t bufLen, uint16_t timeout, uint16_t echo,
+static bool consoleInit(p_cli_ctx ctx ,uint16_t bufLen, uint16_t echo,
 		pconsolecommand cmd);
 static void printhelpstring(p_cli_ctx ctx, pconsolecommand cmd);
 
@@ -44,7 +44,7 @@ DWORD WINAPI handle_get_char(LPVOID ctx)
 
 int getCharConsole(p_cli_ctx ctx)
 {
-	p_cli_ctx con = (p_cli_ctx)ctx;
+	p_cli_ctx con = ctx;
 
 	if(con->data_buf.rx_g == con->data_buf.rx_p) return (-1);
 
@@ -57,20 +57,6 @@ int getCharConsole(p_cli_ctx ctx)
 }
 
 
-void printVersion(void)
-{
-	LOGD("\n");
-	STAR_SPACER;
-
-	LOGD("Generic CLI version %s\n",VERSION);
-	LOGD("BUILD DATE: %s | BUILD TIME %s\n",__DATE__,__TIME__);
-}
-
-CMDFUNC(ver)
-{
-	printVersion();
-}
-
 CMDFUNC(help)
 {
 	p_cli_ctx ctx = (p_cli_ctx)hdl;
@@ -81,13 +67,18 @@ CMDFUNC(help)
 
 CMDFUNC(back)
 {
-	p_cli_ctx ctx = (p_cli_ctx)hdl;
+	p_cli_ctx ctx = (p_cli_ctx) hdl;
 
 	ctx->con->consolePageHolder.history_count = ctx->con->consolePageHolder.history_count
 			?ctx->con->consolePageHolder.history_count-1:(MAX_PAGE_HISTORY-1);
 	set_current_page(ctx,
-			ctx->con->consolePageHolder.page_history[ctx->con->consolePageHolder.history_count],
+			ctx->con->consolePageHolder.
+			page_history_info[ctx->con->consolePageHolder.history_count].page_history,
 			true,false);
+
+	ctx->con->consolePageHolder.
+				page_history_info[ctx->con->consolePageHolder.history_count]
+								  .page_history = NULL;
 
 }
 
@@ -96,25 +87,15 @@ CMDFUNC(home)
 	p_cli_ctx ctx = (p_cli_ctx)hdl;
 
 	set_current_page(ctx, ctx->con->consolePageHolder.home_page,true,true);
-
 	ctx->con->consolePageHolder.current_page = ctx->con->consolePageHolder.home_page;
-	printhelpstring(ctx, ctx->con->consolePageHolder.current_page);
 
 }
 
-CMDFUNC(history)
+CMDFUNC(quit)
 {
+	p_cli_ctx ctx = (p_cli_ctx)hdl;
+	ctx->quit_flag = true;
 
-}
-
-CMDFUNC(time)
-{
-	LOGD("%s\n",__TIME__);
-}
-
-CMDFUNC(date)
-{
-	LOGD("%s\n",__DATE__);
 }
 
 consolecommands housekeeping_cmd[] =
@@ -122,61 +103,58 @@ consolecommands housekeeping_cmd[] =
 		COMMAND(help          , print help of current page),
 		COMMAND(home          , To return back to home page),
 		COMMAND(back          , Return to previous page),
-		{CONSOLE_END}
-};
-
-consolecommands build_info_page[] =
-{
-		COMMAND(time             , This prints softwares current version),
-		COMMAND(date             , command help string),
-		{CONSOLE_END}
-};
-
-consolecommands console_home[] =
-{
-		COMMAND(ver             , This prints softwares current version                 ),
-		PAGE(buildinfo          , command help string,                   build_info_page),
-		{CONSOLE_END}
+		COMMAND(quit          , exit the application),
+		{CONSOLE_ENTRY_END}
 };
 
 
-CLI_STATUS cli_init(CLI_HDL *hdl)
+CLI_STATUS cli_init(p_cli_ctx *hdl, p_cli_init_t init_info)
 {
 	CLI_STATUS ret_val = CLI_FAILUE;
 
-	p_cli_ctx main_ctx = calloc(1, sizeof(cli_ctx));
+	if (NULL != hdl && NULL != init_info)
+	{
+		p_cli_ctx main_ctx = calloc(1, sizeof(cli_ctx));
 
-	consoleInit(main_ctx, 1024, 1000, 0, console_home);
+		consoleInit(main_ctx, init_info->receive_buffer_size, init_info->echo , init_info->home_page);
 
+		if (NULL != main_ctx)
+		{
 #ifdef __linux__
 	pthread_create(&main_ctx->data_buf.con_thread,NULL,handle_get_char,main_ctx);
 	if (0 == main_ctx->data_buf.con_thread) {
 #elif _WIN32
-	main_ctx->data_buf.con_thread = CreateThread(NULL, 0, handle_get_char,
-			main_ctx, 0, 0);
-	if (NULL == main_ctx->data_buf.con_thread) {
+			main_ctx->data_buf.con_thread = CreateThread(NULL, 0,
+					handle_get_char, main_ctx, 0, 0);
+			if (NULL == main_ctx->data_buf.con_thread) {
 #else
 #error "PLATFORM NOT SELECTED WIN/LINUX"
 #endif
 
-		LOGD("CON thread init failed \n");
-	} else {
-		*hdl = (CLI_HDL) main_ctx;
-		ret_val = CLI_SUCCESS;
+				LOGD("CON thread init failed \n");
+			} else {
+				*hdl = main_ctx;
+				ret_val = CLI_SUCCESS;
 
-		printVersion();
-		printhelpstring(main_ctx, main_ctx->con->consolePageHolder.current_page);
+				printhelpstring(main_ctx,
+						main_ctx->con->consolePageHolder.current_page);
+			}
+
+			ret_val = CLI_SUCCESS;
+		} else {
+			/* DO NOTHING*/
+		}
+	} else
+	{
+		/* DO NOTHING*/
 	}
-
-	ret_val = CLI_SUCCESS;
-
 	return ret_val;
 }
 
 void consoleAsciiInterpretor (pvoid  ctx  ,uint8_t* dBuf , uint16_t dLen);
 void consoleBinaryInterpretor(pvoid  ctx  ,uint8_t* dBuf , uint16_t dLen);
 
-static bool consoleInit(p_cli_ctx ctx ,uint16_t bufLen, uint16_t timeout, uint16_t echo,
+static bool consoleInit(p_cli_ctx ctx ,uint16_t bufLen, uint16_t echo,
 		pconsolecommand cmd)
 {
 
@@ -186,7 +164,6 @@ static bool consoleInit(p_cli_ctx ctx ,uint16_t bufLen, uint16_t timeout, uint16
 
 		ctx->con->maxBufLen = MAX_CONSOLE_BUF;
 		ctx->con->echo = echo;
-		ctx->con->timeout = timeout;
 		ctx->con->consolePageHolder.home_page = cmd;
 		ctx->con->consolePageHolder.current_page = NULL;
 		ctx->con->index = 0;
@@ -210,9 +187,9 @@ static bool consoleInit(p_cli_ctx ctx ,uint16_t bufLen, uint16_t timeout, uint16
 	return (true);
 }
 
-void consoleProcess(CLI_HDL hdl)
+void consoleProcess(p_cli_ctx hdl)
 {
-	p_cli_ctx conH = (p_cli_ctx)hdl;
+	p_cli_ctx conH = hdl;
 
 	int ch = getCharConsole(conH);
 
@@ -257,9 +234,14 @@ static void add_to_history(p_cli_ctx ctx ,pconsolecommand page)
 {
 	if (NULL != page && NULL != ctx)
 	{
-		printf("adding to history\n");
+		ctx->con->consolePageHolder.total_commands++;
+
+		ctx->con->consolePageHolder.page_history_info[ctx->con->consolePageHolder.history_count].
+			page_history = page;
+
 		ctx->con->consolePageHolder.
-			page_history[ctx->con->consolePageHolder.history_count] = page;
+		page_history_info[ctx->con->consolePageHolder.history_count].command_index
+			= ctx->con->consolePageHolder.total_commands;
 
 		ctx->con->consolePageHolder.history_count++;
 
@@ -306,7 +288,6 @@ static void handle_page_call(p_cli_ctx ctx ,pconsolecommand page)
 	if(NULL != page && NULL != ctx)
 	{
 		set_current_page(ctx, page->next_page,true,true);
-		printhelpstring(ctx, page->next_page);
 	}
 	else
 	{
@@ -316,7 +297,7 @@ static void handle_page_call(p_cli_ctx ctx ,pconsolecommand page)
 
 void consoleAsciiInterpretor(pvoid context ,uint8_t* dBuf , uint16_t dLen)
 {
-	p_cli_ctx ctx = (p_cli_ctx)context;
+	p_cli_ctx ctx = context;
 	char* tok;
 
 	tok = strtok((char *)dBuf, "\n");
@@ -325,7 +306,7 @@ void consoleAsciiInterpretor(pvoid context ,uint8_t* dBuf , uint16_t dLen)
 	{
 		ctx->token_ctx.tokencount++;
 		for (pconsolecommand iter = ctx->con->consolePageHolder.current_page
-				; iter->type != CONSOLE_END;
+				; iter->type != CONSOLE_ENTRY_END;
 				iter++)
 		{
 			if (strcmp(iter->commandstr, tok) == 0)
@@ -346,7 +327,7 @@ void consoleAsciiInterpretor(pvoid context ,uint8_t* dBuf , uint16_t dLen)
 		}
 
 		for (pconsolecommand iter = ctx->con->houseKeepingCmd
-				; iter->type != CONSOLE_END;
+				; iter->type != CONSOLE_ENTRY_END;
 				iter++)
 		{
 			if (strcmp(iter->commandstr, tok) == 0)
@@ -378,10 +359,10 @@ void consoleBinaryInterpretor(void *hdl ,uint8_t* dBuf , uint16_t dLen)
 
 static void printhelpstring(p_cli_ctx ctx, pconsolecommand cmd)
 {
-	STAR_SPACER;
+	LOG_SPACER;
 
 	LOGD("CHOSE FROM BELOW MENU:\n\n");
-	for(pconsolecommand cmditer = &cmd[0]; CONSOLE_END != cmditer->type
+	for(pconsolecommand cmditer = &cmd[0]; CONSOLE_ENTRY_END != cmditer->type
 			;cmditer++)
 	{
 		if(cmditer->type == CONSOLE_PAGE){
@@ -390,7 +371,7 @@ static void printhelpstring(p_cli_ctx ctx, pconsolecommand cmd)
 	}
 	LOGD("\n");
 
-	for (pconsolecommand cmditer = &cmd[0]; CONSOLE_END != cmditer->type;
+	for (pconsolecommand cmditer = &cmd[0]; CONSOLE_ENTRY_END != cmditer->type;
 			cmditer++)
 	{
 		if (cmditer->type == CONSOLE_COMMAND)
@@ -403,14 +384,25 @@ static void printhelpstring(p_cli_ctx ctx, pconsolecommand cmd)
 
 	LOGD("\n");
 
-	for (pconsolecommand cmditer = ctx->con->houseKeepingCmd; CONSOLE_END != cmditer->type;
+	for (pconsolecommand cmditer = ctx->con->houseKeepingCmd; CONSOLE_ENTRY_END != cmditer->type;
 			cmditer++)
 	{
 		console("%s %s:%s\n" , cmditer->commandstr,
 				printFormatSpace(cmditer->commandstr,PRINT_HELP_SPACER),cmditer->helpstr);
 	}
 
-	STAR_SPACER;
+	LOG_SPACER;
 
 }
 
+bool exit_check(p_cli_ctx hdl)
+{
+	bool ret_val = true;
+
+	if(NULL != hdl)
+	{
+		ret_val = hdl->quit_flag;
+	}
+
+	return(ret_val);
+}
