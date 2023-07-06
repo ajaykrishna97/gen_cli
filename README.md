@@ -34,6 +34,8 @@ make
 
 <img src="images/EXAMPLE_CLI_HOME_2.png" width="320">
 
+<img src="images/EXAMPLE_CLI_HOME_3.png" width="320">
+
 <!-- LICENSE -->
 ## License
 
