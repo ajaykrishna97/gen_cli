@@ -44,15 +44,15 @@ CMDFUNC(date)
 
 consolecommands build_info_page[] =
 {
-		COMMAND(time             , This prints softwares current version),
-		COMMAND(date             , command help string),
+		COMMAND(time             , This prints softwares build time),
+		COMMAND(date             , This prints softwares build date),
 		{CONSOLE_ENTRY_END}
 };
 
 consolecommands console_home[] =
 {
 		COMMAND(ver             , This prints softwares current version                 ),
-		PAGE   (buildinfo       , command help string,                   build_info_page),
+		PAGE   (buildinfo       , list commands related to buildinfo,                   build_info_page),
 		{CONSOLE_ENTRY_END}
 };
 
