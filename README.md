@@ -28,9 +28,11 @@ make
 
 * Check [example](https://github.com/ajaykrishna97/gen_cli/blob/main/CLI/src/main.c) for sample API usage.
 
+## Sample screenshots
 
-![SAMPLE_IMAGE 1](https://github.com/ajaykrishna97/gen_cli/tree/main/images/EXAMPLE_CLI_HOME.png?raw=true)
-![SAMPLE_IMAGE 2](https://github.com/ajaykrishna97/gen_cli/tree/main/images/EXAMPLE_CLI_CHANGE_PAGE.png?raw=true)
+<img src="images/EXAMPLE_CLI_HOME.png" width="320">
+
+<img src="images/EXAMPLE_CLI_HOME_2.png" width="320">
 
 <!-- LICENSE -->
 ## License
