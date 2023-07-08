@@ -19,6 +19,7 @@ static void set_current_page(p_cli_ctx ctx, pconsolecommand page, bool print_hel
 		bool update_history);
 static void handle_page_call(p_cli_ctx ctx ,pconsolecommand page);
 
+static bool argument_tokeniser(p_cli_ctx hdl, uint8_t* dBuf , uint16_t dLen);
 
 #ifdef __linux__
 void* handle_get_char(void *ctx)
@@ -100,10 +101,11 @@ CMDFUNC(quit)
 
 consolecommands housekeeping_cmd[] =
 {
-		COMMAND(help          , print help of current page),
-		COMMAND(home          , To return back to home page),
-		COMMAND(back          , Return to previous page),
-		COMMAND(quit          , exit the application),
+		COMMAND(help,0, print help of current page),
+		COMMAND(home,0, To return back to home page),
+		COMMAND(back,0, Return to previous page),
+		COMMAND(quit,0, exit the application),
+
 		{CONSOLE_ENTRY_END}
 };
 
@@ -295,61 +297,76 @@ static void handle_page_call(p_cli_ctx ctx ,pconsolecommand page)
 	}
 }
 
-void consoleAsciiInterpretor(pvoid context ,uint8_t* dBuf , uint16_t dLen)
-{
+void consoleAsciiInterpretor(pvoid context, uint8_t *dBuf, uint16_t dLen) {
 	p_cli_ctx ctx = context;
-	char* tok;
+	char *tok;
 
-	tok = strtok((char *)dBuf, "\n");
+	settokensparams(&ctx->token_ctx, dBuf, dLen);
 
-	if (NULL != tok)
-	{
-		ctx->token_ctx.tokencount++;
-		for (pconsolecommand iter = ctx->con->consolePageHolder.current_page
-				; iter->type != CONSOLE_ENTRY_END;
-				iter++)
+	argument_tokeniser(ctx, dBuf, dLen);
+	tok = ctx->token_ctx.command;
+
+	if (NULL != tok) {
+		for (pconsolecommand iter = ctx->con->consolePageHolder.current_page;
+				iter->type != CONSOLE_ENTRY_END; iter++)
 		{
-			if (strcmp(iter->commandstr, tok) == 0)
-			{
-				if(CONSOLE_PAGE == iter->type)
-				{
-					handle_page_call(ctx , iter);
+			if (strcmp(iter->commandstr, tok) == 0) {
+				if (CONSOLE_PAGE == iter->type) {
+
+					handle_page_call(ctx, iter);
 					return;
-				}
-				else{
-					if (iter->func != NULL)
+				} else {
+					if (iter->func != NULL
+							&& (iter->req_arg_count
+									== ctx->token_ctx.argument_count))
 					{
-						iter->func(ctx);
+						iter->func(ctx,ctx->token_ctx.argument,ctx->token_ctx.argument_count);
+						return;
+					} else {
+						if (iter->req_arg_count
+								< ctx->token_ctx.argument_count) {
+							LOGD("too many arguments\n");
+						} else {
+							LOGD("too few arguments\n");
+
+						}
 						return;
 					}
 				}
 			}
 		}
 
-		for (pconsolecommand iter = ctx->con->houseKeepingCmd
-				; iter->type != CONSOLE_ENTRY_END;
-				iter++)
-		{
-			if (strcmp(iter->commandstr, tok) == 0)
-			{
-				if(CONSOLE_PAGE == iter->type)
-				{
-					handle_page_call(ctx , iter);
+		for (pconsolecommand iter = ctx->con->houseKeepingCmd;
+				iter->type != CONSOLE_ENTRY_END; iter++) {
+			if (strcmp(iter->commandstr, tok) == 0) {
+				if (CONSOLE_PAGE == iter->type) {
+
+					handle_page_call(ctx, iter);
 					return;
-				}
-				else{
-					if (iter->func != NULL)
-					{
-						iter->func(ctx);
+				} else {
+					if (iter->func != NULL
+							&& (iter->req_arg_count
+									== ctx->token_ctx.argument_count)) {
+						iter->func(ctx,ctx->token_ctx.argument,ctx->token_ctx.argument_count);
+						return;
+					} else {
+						if (iter->req_arg_count
+								< ctx->token_ctx.argument_count) {
+							LOGD("too many arguments\n");
+						} else {
+							LOGD("too few arguments\n");
+
+						}
 						return;
 					}
 				}
 			}
 		}
-
-
+	} else {
 	}
-	LOGE("SYNTAX ERROR\n");
+
+	LOGD("INVALID INPUT\n");
+
 }
 
 void consoleBinaryInterpretor(void *hdl ,uint8_t* dBuf , uint16_t dLen)
@@ -406,3 +423,42 @@ bool exit_check(p_cli_ctx hdl)
 
 	return(ret_val);
 }
+
+static bool argument_tokeniser(p_cli_ctx hdl, uint8_t* dBuf , uint16_t dLen)
+{
+	bool ret_val = false;
+
+	settokensparams(&hdl->token_ctx,dBuf,dLen);
+
+	hdl->token_ctx.command = (char *)getnexttoken(&hdl->token_ctx);
+
+	for(int32_t i =0 ; i < MAX_ARGUMENT ; i++)
+	{
+		hdl->token_ctx.argument[i] = (char *)getnexttoken(&hdl->token_ctx);
+		if(NULL != hdl->token_ctx.argument[i])
+		{
+			hdl->token_ctx.argument_count++;
+		}
+		else{
+			break;
+		}
+	}
+
+	return ret_val;
+}
+
+bool enable_echo(p_cli_ctx hdl,bool flag)
+{
+	bool ret_val = false;
+
+	if(NULL != hdl)
+	{
+		hdl->con->echo = flag;
+	}
+
+	return(ret_val);
+}
+
+
+
+

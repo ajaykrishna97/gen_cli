@@ -1,5 +1,8 @@
 # gen_cli
-generic CLI with easy configurabilty for windows and Linux made in C 
+generic CLI with easy configurabilty for windows and Linux made in C.
+
+Simple to configure a new command or page to the command line interface module. Works with input from STDIO.
+Compatible with Linux ,windows and Android native. 
 
 ## Building
 

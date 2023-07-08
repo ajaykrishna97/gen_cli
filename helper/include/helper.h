@@ -10,13 +10,16 @@
 
 #include "dtypes.h"
 #include "stdio.h"
+#include "cli_api.h"
 
 typedef struct tokener_st
 {
-	u8 *argptr;
-	u16 arglen;
-	u8 *token;
-	u8 tokencount;
+	u8     *argptr;
+	u16     arglen;
+
+	char   *command;
+	char   *argument[MAX_ARGUMENT+1];
+	u8      argument_count;
 
 }tokener_ctx , *ptokener_ctx;
 

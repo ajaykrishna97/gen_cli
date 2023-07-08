@@ -42,17 +42,42 @@ CMDFUNC(date)
 	LOGD("%s\n",__DATE__);
 }
 
+CMDFUNC(echo)
+{
+	p_cli_ctx ctx = (p_cli_ctx) hdl;
+
+	if(NULL != ctx)
+	{
+
+		int32_t echo_flag = 0;
+
+		if(0 != sscanf(args[0],"%d",&echo_flag))
+		{
+			enable_echo(ctx, (bool)echo_flag);
+			LOGD("Done\n");
+
+		}else{
+			LOGD("INVALID ARGUMENT\n");
+		}
+
+	}
+	else{
+
+	}
+}
+
 consolecommands build_info_page[] =
 {
-		COMMAND(time             , This prints softwares build time),
-		COMMAND(date             , This prints softwares build date),
+		COMMAND(time      ,0      , This prints softwares build time),
+		COMMAND(date      ,0      , This prints softwares build date),
 		{CONSOLE_ENTRY_END}
 };
 
 consolecommands console_home[] =
 {
-		COMMAND(ver             , This prints softwares current version                 ),
-		PAGE   (buildinfo       , list commands related to buildinfo,                   build_info_page),
+		COMMAND(ver        ,0     , This prints softwares current version                ),
+		COMMAND(echo       ,1     , Enables command echo                                 ),
+		PAGE   (buildinfo         , list commands related to buildinfo   ,build_info_page),
 		{CONSOLE_ENTRY_END}
 };
 
@@ -69,7 +94,7 @@ int32_t main(void)
 	initializer.receive_buffer_size = 1024;
 	initializer.home_page 			= console_home;
 
-	CLI_STATUS status 				=cli_init(&hdl,&initializer);
+	CLI_STATUS status 				= cli_init(&hdl,&initializer);
 
 	if(status == CLI_SUCCESS)
 	{

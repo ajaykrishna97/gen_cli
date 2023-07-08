@@ -30,3 +30,10 @@
 - fixed infinite "back" bug
 - updated readme
 - Added sample screenshots
+
+### 8-JUL-2023
+- Added multi argument support
+- Configurable command argument count(too few/ too many) with validation
+- modified COMMAND macro for argument count validation feature
+- Added new command to sample
+	- echo

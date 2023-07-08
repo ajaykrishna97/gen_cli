@@ -22,6 +22,7 @@ bool settokensparams(ptokener_ctx ctx,u8 *s, u16 a)
 	{
 		ctx->argptr = s;
 		ctx->arglen = a;
+		ctx->argument_count = 0;
 
 		ret_val = true;
 	}
@@ -35,8 +36,6 @@ bool settokensparams(ptokener_ctx ctx,u8 *s, u16 a)
 
 u8* getnexttoken(ptokener_ctx ctx)
 {
-	printf("arg prt - %s",ctx->argptr);
-
 	uint8_t *p = ctx->argptr;
 	uint8_t *rtoken;
 	if(*p == '\0')
@@ -56,7 +55,6 @@ u8* getnexttoken(ptokener_ctx ctx)
 		{
 			*p = '\0';
 			ctx->argptr = p+1;
-			printf("rtoken valueable %s\n",rtoken);
 			return (rtoken);
 		}
 		else if( *p == '\n' || *p == '\r')
