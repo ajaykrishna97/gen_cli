@@ -37,10 +37,12 @@ make
 
 <img src="images/EXAMPLE_CLI_HOME_2.png" width="320">
 
+<img src="images/EXAMPLE_CLI_HOME_3.png" width="320">
+
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the Apache-2.0 License. See `LICENSE` for more information.
 
 
 
