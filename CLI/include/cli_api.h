@@ -16,8 +16,8 @@
 
 #define CMDFUNC(NAME) void NAME ## _method(void *hdl,  char **args, uint16_t argc)
 
-#define COMMAND(NAME ,ARG_COUNT, HELPSTRING)  {CONSOLE_COMMAND, #NAME, #HELPSTRING, NAME ## _method , NULL , ARG_COUNT}
-#define PAGE(NAME , HELPSTRING, page_list)  {CONSOLE_PAGE, #NAME, #HELPSTRING, NULL , page_list, 0}
+#define COMMAND(NAME ,ARG_COUNT, HELPSTRING,ADVANCED_HELP)  {CONSOLE_COMMAND, #NAME, #HELPSTRING, NAME ## _method , NULL , ARG_COUNT, #ADVANCED_HELP}
+#define PAGE(NAME , HELPSTRING, page_list)  {CONSOLE_PAGE, #NAME, #HELPSTRING, NULL , page_list, 0, ""}
 
 #define PRINTF printf
 #define console PRINTF
@@ -55,6 +55,7 @@ typedef struct consolecommands_
 	msgfuncptr		           func;
 	struct consolecommands_   *next_page;
 	uint16_t                   req_arg_count;
+	char              		  *advance_helpstr;
 
 }consolecommands , *pconsolecommand;
 

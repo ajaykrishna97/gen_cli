@@ -37,3 +37,7 @@
 - modified COMMAND macro for argument count validation feature
 - Added new command to sample
 	- echo
+
+### 10-JUL-2023
+- Added advanced help to API
+

@@ -68,16 +68,16 @@ CMDFUNC(echo)
 
 consolecommands build_info_page[] =
 {
-		COMMAND(time      ,0      , This prints softwares build time),
-		COMMAND(date      ,0      , This prints softwares build date),
+		COMMAND(time         ,0      , This prints softwares build time,time),
+		COMMAND(date         ,0      , This prints softwares build date,date),
 		{CONSOLE_ENTRY_END}
 };
 
 consolecommands console_home[] =
 {
-		COMMAND(ver        ,0     , This prints softwares current version                ),
-		COMMAND(echo       ,1     , Enables command echo                                 ),
-		PAGE   (buildinfo         , list commands related to buildinfo   ,build_info_page),
+		COMMAND(ver          ,0     , This prints softwares current version                ,ver),
+		COMMAND(echo         ,1     , Enables command echo                                 ,echo [FLAG] | FLAG:1-enable 0-disable),
+		PAGE   (buildinfo           , list commands related to buildinfo                   ,build_info_page),
 		{CONSOLE_ENTRY_END}
 };
 
@@ -109,7 +109,6 @@ int32_t main(void)
 	while(0 == exit_check(hdl))
 	{
 		consoleProcess(hdl);
-
 	}
 
 	return ret_val;

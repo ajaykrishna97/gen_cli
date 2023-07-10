@@ -21,13 +21,13 @@ make
 ## API Usage
 
 * To add a new command use the below macro   
-`COMMAND(COMMAND_NAME, HELP_STRING)`  
+`COMMAND(COMMAND_NAME, EXPECTED_ARGUMENT_COUNT, HELP_STRING, Advanced help)`  
 
 * Each command must have its own command function which will be triggered when the command is entered by the user    
 `CMDFUNC(COMMAND_NAME)`
 
 * To add a new page use the below macro    
-`PAGE(PAGE_NAME , PAGE_HELP_STRING,POINTER_TO_PAGE)`
+`PAGE(PAGE_NAME, PAGE_HELP_STRING, POINTER_TO_PAGE)`
 
 * Check [example](https://github.com/ajaykrishna97/gen_cli/blob/main/CLI/src/main.c) for sample API usage.
 
