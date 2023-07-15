@@ -21,7 +21,7 @@ make
 ## API Usage
 
 * To add a new command use the below macro   
-`COMMAND(COMMAND_NAME, EXPECTED_ARGUMENT_COUNT, HELP_STRING, Advanced help)`  
+`COMMAND(COMMAND_NAME, EXPECTED_ARGUMENT_COUNT, HELP_STRING, ADVANCED_HELP)`  
 
 * Each command must have its own command function which will be triggered when the command is entered by the user    
 `CMDFUNC(COMMAND_NAME)`
