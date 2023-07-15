@@ -37,6 +37,8 @@ typedef void (*msgfuncptr)(void *hdl, char **args, uint16_t argc);
 #define PRINT_HELP_SPACER 10
 
 #define MAX_ARGUMENT 4
+#define MAX_HISTORY_STORE_COUNT  32
+#define MAX_COMMAND_STRING_SIZE  128
 
 typedef struct cli_st cli_ctx , *p_cli_ctx;
 

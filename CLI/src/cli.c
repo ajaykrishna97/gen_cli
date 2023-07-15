@@ -21,6 +21,8 @@ static void handle_page_call(p_cli_ctx ctx ,pconsolecommand page);
 
 static bool argument_tokeniser(p_cli_ctx hdl, uint8_t* dBuf , uint16_t dLen);
 
+static bool add_to_cmd_history(p_cli_ctx ctx ,uint8_t *dBuf, uint16_t dLen);
+
 #ifdef __linux__
 void* handle_get_char(void *ctx)
 #elif _WIN32
@@ -99,9 +101,33 @@ CMDFUNC(quit)
 
 }
 
+CMDFUNC(history)
+{
+	p_cli_ctx ctx = (p_cli_ctx)hdl;
+
+	int iter = ctx->con->consolePageHolder.cmd_history.cmd_hist_get;
+
+	for(int i = 0; i < MAX_HISTORY_STORE_COUNT;i++)
+	{
+		LOGD("%d)%s",(i+1),ctx->con->consolePageHolder.cmd_history.history[iter].command);
+		iter++;
+
+		if(iter == MAX_HISTORY_STORE_COUNT){
+			iter = 0;
+		}
+
+		if(iter == ctx->con->consolePageHolder.cmd_history.cmd_hist_put)
+		{
+			break;
+		}
+	}
+
+}
+
 consolecommands housekeeping_cmd[] =
 {
 		COMMAND(help,0, print help of current page,help),
+		COMMAND(history,0, exit the application,quit),
 		COMMAND(home,0, To return back to home page,home),
 		COMMAND(back,0, Return to previous page,back),
 		COMMAND(quit,0, exit the application,quit),
@@ -189,6 +215,65 @@ static bool consoleInit(p_cli_ctx ctx ,uint16_t bufLen, uint16_t echo,
 	return (true);
 }
 
+
+static bool handle_bang_command(p_cli_ctx ctx, uint8_t *dBuf, uint16_t dLen)
+{
+
+	char *tok;
+	int32_t index = -1;
+	char buffer[MAX_COMMAND_STRING_SIZE];
+
+
+	if(dBuf[0] == '!')
+	{
+		index = (!ctx->con->consolePageHolder.cmd_history.cmd_hist_put)?
+				MAX_HISTORY_STORE_COUNT:
+				(ctx->con->consolePageHolder.cmd_history.cmd_hist_put-1);
+
+		if (index < MAX_HISTORY_STORE_COUNT
+				&& index
+						< ctx->con->consolePageHolder.cmd_history.command_count) {
+			strncpy(buffer,
+					ctx->con->consolePageHolder.cmd_history.history[index].command,
+					ctx->con->consolePageHolder.cmd_history.history[index].dLen);
+
+			ctx->con->asciiInterpretor(ctx, (uint8_t*) buffer,
+					ctx->con->consolePageHolder.cmd_history.history[index].dLen);
+
+			return 1;
+		}
+	}
+	else
+	{
+		settokensparams(&ctx->token_ctx, dBuf, dLen);
+		argument_tokeniser(ctx, dBuf, dLen);
+
+		tok = ctx->token_ctx.command;
+		if (0 != sscanf(tok, "%d", &index)) {
+			index = index - 1;
+			index = (ctx->con->consolePageHolder.cmd_history.cmd_hist_get+index)
+					%MAX_HISTORY_STORE_COUNT;
+
+			if (index < MAX_HISTORY_STORE_COUNT
+					&& index
+							< ctx->con->consolePageHolder.cmd_history.command_count) {
+				strncpy(buffer,
+						ctx->con->consolePageHolder.cmd_history.history[index].command,
+						ctx->con->consolePageHolder.cmd_history.history[index].dLen);
+
+				ctx->con->asciiInterpretor(ctx, (uint8_t*) buffer,
+						ctx->con->consolePageHolder.cmd_history.history[index].dLen);
+
+				return 1;
+			}
+
+		}
+	}
+
+	return 0;
+}
+
+
 void consoleProcess(p_cli_ctx hdl)
 {
 	p_cli_ctx conH = hdl;
@@ -216,7 +301,16 @@ void consoleProcess(p_cli_ctx hdl)
 	{
 		if(NULL != conH->con->asciiInterpretor && (conH->con->index > 1))
 		{
-			conH->con->asciiInterpretor(conH ,conH->con->buf , conH->con->index);
+			if(conH->con->buf[0] == '!')
+			{
+				handle_bang_command(conH, &conH->con->buf[1], (conH->con->index-1));
+
+			}
+			else
+			{
+				add_to_cmd_history(conH, conH->con->buf, conH->con->index);
+				conH->con->asciiInterpretor(conH ,conH->con->buf , conH->con->index);
+			}
 			conH->con->index = 0;
 		}
 		else
@@ -297,7 +391,51 @@ static void handle_page_call(p_cli_ctx ctx ,pconsolecommand page)
 	}
 }
 
-void consoleAsciiInterpretor(pvoid context, uint8_t *dBuf, uint16_t dLen) {
+static bool add_to_cmd_history(p_cli_ctx ctx, uint8_t *dBuf, uint16_t dLen) {
+	if (dLen > MAX_COMMAND_STRING_SIZE) {
+		LOGD("Command too big not adding to history\n");
+		return 0;
+	}
+
+	if ((ctx->con->consolePageHolder.cmd_history.cmd_hist_put
+			== ctx->con->consolePageHolder.cmd_history.cmd_hist_get)
+			&& ctx->con->consolePageHolder.cmd_history.full_flag) {
+		ctx->con->consolePageHolder.cmd_history.cmd_hist_get++;
+
+		if (ctx->con->consolePageHolder.cmd_history.cmd_hist_get
+				>= MAX_HISTORY_STORE_COUNT) {
+			ctx->con->consolePageHolder.cmd_history.cmd_hist_get = 0;
+		}
+	}
+
+	memset(
+			ctx->con->consolePageHolder.cmd_history.history[ctx->con->consolePageHolder.cmd_history.cmd_hist_put].command,
+			0, MAX_COMMAND_STRING_SIZE);
+	strncpy(
+			ctx->con->consolePageHolder.cmd_history.history[ctx->con->consolePageHolder.cmd_history.cmd_hist_put].command,
+			(char*) dBuf, dLen);
+
+	ctx->con->consolePageHolder.cmd_history.history[ctx->con->consolePageHolder.cmd_history.cmd_hist_put].dLen =
+			dLen;
+
+	ctx->con->consolePageHolder.cmd_history.command_count++;
+	ctx->con->consolePageHolder.cmd_history.cmd_hist_put++;
+
+	if (ctx->con->consolePageHolder.cmd_history.cmd_hist_put
+			>= MAX_HISTORY_STORE_COUNT) {
+		ctx->con->consolePageHolder.cmd_history.cmd_hist_put = 0;
+	}
+
+	if (ctx->con->consolePageHolder.cmd_history.cmd_hist_put
+			== ctx->con->consolePageHolder.cmd_history.cmd_hist_get) {
+		ctx->con->consolePageHolder.cmd_history.full_flag = 1;
+	}
+
+	return 1;
+}
+
+void consoleAsciiInterpretor(pvoid context, uint8_t *dBuf, uint16_t dLen)
+{
 	p_cli_ctx ctx = context;
 	char *tok;
 

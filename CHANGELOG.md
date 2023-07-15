@@ -41,3 +41,6 @@
 ### 10-JUL-2023
 - Added advanced help to API
 
+### 15-JUL-2023
+- Added bang and bang bang! support
+- Added command history  

@@ -50,16 +50,32 @@ typedef struct cli_buffer_St
 
 }cli_buf_h , *p_cli_buf_h;
 
+typedef struct command_history_handler_st
+{
+	uint32_t  dLen;
+	char      command[MAX_COMMAND_STRING_SIZE];
+}cmd_hist;
 
 typedef struct page_handler_st
 {
 	uint32_t total_commands;
 	uint16_t history_count;
+
 	struct history_maintainer_st
 	{
 		uint32_t command_index;
 		pconsolecommand page_history;
 	}page_history_info[MAX_PAGE_HISTORY];
+
+	struct command_history_st
+	{
+		uint32_t        cmd_hist_put;
+		uint32_t        cmd_hist_get;
+		uint8_t         full_flag;
+
+		uint32_t        command_count;
+		cmd_hist        history[MAX_HISTORY_STORE_COUNT];
+	}cmd_history;
 
 	pconsolecommand home_page;
 	pconsolecommand current_page;
