@@ -126,11 +126,11 @@ CMDFUNC(history)
 
 consolecommands housekeeping_cmd[] =
 {
-		COMMAND(help,0, print help of current page,help),
-		COMMAND(history,0, exit the application,quit),
-		COMMAND(home,0, To return back to home page,home),
-		COMMAND(back,0, Return to previous page,back),
-		COMMAND(quit,0, exit the application,quit),
+		COMMAND(help    ,0, print help of current page,help),
+		COMMAND(history ,0, exit the application,quit),
+		COMMAND(home    ,0, To return back to home page,home),
+		COMMAND(back    ,0, Return to previous page,back),
+		COMMAND(quit    ,0, exit the application,quit),
 
 		{CONSOLE_ENTRY_END}
 };
@@ -301,7 +301,7 @@ void consoleProcess(p_cli_ctx hdl)
 	{
 		if(NULL != conH->con->asciiInterpretor && (conH->con->index > 1))
 		{
-			if(conH->con->buf[0] == '!')
+			if(conH->con->buf[0] == '!' && conH->con->index > 2)
 			{
 				handle_bang_command(conH, &conH->con->buf[1], (conH->con->index-1));
 
