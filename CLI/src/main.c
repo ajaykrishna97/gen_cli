@@ -13,7 +13,9 @@
 #include <stdint.h>
 
 #include "cli_api.h"
+#include "cla_parser_api.h"
 
+static void  print_cla_help(void);
 
 static void printVersion(void)
 {
@@ -81,34 +83,68 @@ consolecommands console_home[] =
 		{CONSOLE_ENTRY_END}
 };
 
-int32_t main(void)
+
+
+CLA_HDLR(help)
+{
+	print_cla_help();
+	return true;
+}
+
+
+CLA_HDLR(version)
+{
+	printVersion();
+	return true;
+}
+
+
+cla_ctx cla_list[] =
+{
+		CLA_ADD('h',help   ,0,0,"prints help string for all command line options"),
+		CLA_ADD('v',version,1,0,"give current version of the sw"),
+};
+
+
+static void print_cla_help(void)
+{
+	cla_print_help(cla_list);
+}
+
+int32_t main(int argc,char *args[])
 {
 	int32_t ret_val = -1;
 
 	p_cli_ctx hdl = NULL;
 	cli_init_t  initializer;
+	CLA_STATUS status = CLA_FAILED;
 
-	printVersion();
+	status = cla_parse(cla_list,args,argc);
 
-	initializer.echo 				= false;
-	initializer.receive_buffer_size = 1024;
-	initializer.home_page 			= console_home;
-
-	CLI_STATUS status 				= cli_init(&hdl,&initializer);
-
-	if(status == CLI_SUCCESS)
+	if(status == CLA_SUCCESS)
 	{
-		ret_val = 0;
+		printVersion();
 
-	}
-	else
-	{
-		LOGE("CLI INIT FAILED\n");
-	}
+		initializer.echo 				= false;
+		initializer.receive_buffer_size = 1024;
+		initializer.home_page 			= console_home;
 
-	while(0 == exit_check(hdl))
-	{
-		consoleProcess(hdl);
+		CLI_STATUS status 				= cli_init(&hdl,&initializer);
+
+		if(status == CLI_SUCCESS)
+		{
+			ret_val = 0;
+		}
+		else
+		{
+			LOGE("CLI INIT FAILED\n");
+		}
+
+
+		while(0 == exit_check(hdl))
+		{
+			consoleProcess(hdl);
+		}
 	}
 
 	return ret_val;

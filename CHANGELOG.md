@@ -43,4 +43,12 @@
 
 ### 15-JUL-2023
 - Added bang and bang bang! support
-- Added command history  
+- Added command history 
+
+### 18-SEP-2023
+- Added command line argument parser
+- Updated example with argument parser
+- added argument options
+	- "-v --version"
+	- "-h --help"
+ 
