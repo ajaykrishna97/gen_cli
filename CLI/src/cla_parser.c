@@ -19,7 +19,7 @@ static char *error_string[CLA_ERROR_MAX] =
 {
 		"Success",
 		"Too few argument",
-		"Unknown opt"
+		"Unknown opt",
 		"Exit flag true"
 };
 
@@ -40,7 +40,7 @@ CLA_ERROR_CODE_T validate_cla(cla_ctx *cla_list ,char** args ,uint16_t argc, boo
 
 					for(p_cla_ctx ctx = cla_list; ctx->cla_alt_string != NULL; ctx++)
 					{
-						if(strcmp(ctx->cla_alt_string,&args[i][1]))
+						if(0 == strcmp(ctx->cla_alt_string,&args[i][2]))
 						{
 							status = CLA_NO_ERROR;
 
@@ -132,6 +132,7 @@ CLA_ERROR_CODE_T validate_cla(cla_ctx *cla_list ,char** args ,uint16_t argc, boo
 			}
 			else
 			{
+				status = CLA_ERROR_UNKNOWN_OPT;
 				LOGD_CLA("Invalid argument:%s\n",args[i]);
 			}
 		}
@@ -159,7 +160,7 @@ CLA_ERROR_CODE_T invoke_cla(cla_ctx *cla_list, char **args, uint16_t argc, bool 
 					for (p_cla_ctx ctx = cla_list; ctx->cla_alt_string != NULL;
 							ctx++)
 					{
-						if (strcmp(ctx->cla_alt_string, &args[i][1]))
+						if (0 == strcmp(ctx->cla_alt_string, &args[i][2]))
 						{
 							ctx->handler(&args[i + 1], ctx->arg_count);
 							i = i+ctx->arg_count;

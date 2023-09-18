@@ -101,7 +101,7 @@ CLA_HDLR(version)
 
 cla_ctx cla_list[] =
 {
-		CLA_ADD('h',help   ,0,0,"prints help string for all command line options"),
+		CLA_ADD('h',help   ,1,0,"prints help string for all command line options"),
 		CLA_ADD('v',version,1,0,"give current version of the sw"),
 };
 
